@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Coast Audiology - Outpatient Super Bill</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* ========== RESET & BASE STYLES ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            background-color: #525659;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        /* Chrome, Safari, Edge, Opera */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* ========== TOOLBAR STYLES ========== */
+        .pdf-toolbar {
+            background-color: #323639;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .toolbar-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .toolbar-button:hover {
+            background-color: #4a4d50;
+        }
+        .toolbar-separator {
+            width: 1px;
+            height: 20px;
+            background-color: #555;
+        }
+        .zoom-level {
+            color: #ccc;
+            font-size: 13px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* ========== DOCUMENT LAYOUT ========== */
+        .document-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+        }
+        .page {
+            width: 8.5in;
+            min-height: 11in;
+            padding: 0.5in; 
+            box-sizing: border-box;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transform-origin: top center;
+            transition: transform 0.2s ease;
+        }
+
+        /* ========== HEADER STYLES ========== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .logo {
+            text-align: right;
+            font-family: serif;
+        }
+        .logo-text {
+            font-size: 14px;
+            font-style: italic;
+        }
+        .logo-main {
+            font-size: 28px;
+            font-weight: bold;
+            font-style: italic;
+        }
+        .logo-tagline {
+            font-size: 12px;
+            font-style: italic;
+            color: #666;
+        }
+        .logo-image {
+            height: 50px;
+            position: absolute;
+            left: 480px;
+            top: 40px;
+        }
+
+        /* ========== FORM CONTAINER ========== */
+        .form-container {
+            display: grid;
+            gap: 10px;
+        }
+
+        /* ========== GRID LAYOUTS ========== */
+        /* Top row layout */
+        .top-row {
+            display: grid;
+            grid-template-columns: 35px 85px 35px 55px 35px 55px 85px 85px;
+            border-left: 1px solid #000;
+            margin-top: 10px;
+        }
+        .top-row .cell {
+            border-top: 1px solid #000;
+        }
+        /* Main form layout */
+        .main-form {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #000;
+        }
+        /* Row 1 layout */
+        .main-row-1 {
+            display: grid;
+            grid-template-columns: 60px 90px 70px 80px 90px 150px 80px 100px;
+        }
+        /* Row 2 layout */
+        .main-row-2 {
+            display: grid;
+            grid-template-columns: 300px 420px;
+        }
+        .row-2-col-1 { display: grid; }
+        .row-2-col-2 { display: grid; }
+        .row-2-col-1-child-1 {
+            display: grid;
+            grid-template-columns: 60px 90px 70px 80px;
+        }
+        .row-2-col-1-child-2 {
+            display: grid;
+            grid-template-columns: 60px 240px;
+        }
+        .row-2-col-1-child-3 {
+            display: grid;
+            grid-template-columns: 90px 210px;
+        }
+        .row-2-col-2-child-1 {
+            display: grid;
+            grid-template-columns: 185px 55px;
+        }
+        .row-2-col-2-child-2 {
+            display: grid;
+            grid-template-columns: 125px 55px;
+        }
+        .row-2-col-2-child-cca {
+            display: grid;
+            grid-template-columns: 90px 90px;
+        }
+        /* Row 3 layout */
+        .main-row-3 {
+            display: grid;
+            grid-template-columns: 240px 210px;
+        }
+        /* Row 4 layout */
+        .main-row-4 {
+            display: grid;
+            grid-template-columns: 260px 230px 230px;
+        }
+        .row-4-col-1 {
+            display: grid;
+            grid-template-columns: 80px 180px; 
+            grid-template-rows: 1fr 1fr; 
+        }
+        .row-4-col-2,
+        .row-4-col-3 {
+            display: grid;
+        }
+        /* Row 5 layout */
+        .main-row-5 {
+            display: grid;
+        }
+        .main-row-5 .row-5-top-row {
+            display: grid; 
+            grid-template-columns: 250px 50px 35px 25px 250px 50px 35px 25px;
+        } 
+        .main-row-5 .row-5-cols {
+            display: grid; 
+            grid-template-columns: 360px 360px;
+        }
+        .main-row-5 .row-5-col-child {
+            display: grid;
+            grid-template-columns: 250px 50px 35px 25px;
+        }
+        .row5-cell-borders {
+            border-bottom: none !important;
+            border-right: none !important;
+            border-top: 1px solid black !important;
+        }
+        .row5-cell-last {
+            border-bottom: none !important;
+            border-top: 1px solid black !important;
+        }
+        /* Row 6 layout */
+        .main-row-6 {
+            display: grid;
+        }
+        .main-row-6 .row-6-top-row {
+            display: grid; 
+            grid-template-columns: 250px 50px 35px 25px 250px 50px 35px 25px;
+        } 
+        .main-row-6 .row-6-cols {
+            display: grid; 
+            grid-template-columns: 360px 360px;
+        }
+        .main-row-6 .row-6-col-child {
+            display: grid;
+            grid-template-columns: 250px 50px 35px 25px;
+        }
+        .row-6-col-child-custom {
+            display: grid;
+            grid-template-columns: 250px 50px 60px;
+        }
+        /* Row 7 layout */
+        .main-row-7 {
+            display: grid;
+        }
+        .main-row-7 .row-7-top-row {
+            display: grid; 
+            grid-template-columns: 230px 40px 45px 45px 230px 40px 45px 45px;
+        } 
+        .main-row-7 .row-7-cols {
+            display: grid; 
+            grid-template-columns: 360px 360px;
+        }
+        .main-row-7 .row-7-col-child {
+            display: grid;
+            grid-template-columns: 230px 40px 45px 45px;
+        }
+        /* Bottom row layout */
+        .bottom-row {
+            margin-top: 10px;
+            display: grid; 
+            grid-template-columns: 550px 170px;
+        }
+        .bottom-row .bottom-row-col-1 {
+            display: grid; 
+        }
+        .bottom-row .bottom-row-col-2 {
+            display: grid; 
+            grid-template-columns: 100px 70px;
+        }     
+        .bottom-row .bottom-row-col-2 .cell-label{
+            justify-content: flex-end !important;
+        }        
+        .no-border-background {
+            border: none !important;
+            background-color: white !important;
+        }
+        .white {
+            background-color: white !important;
+        }
+        .background {
+            background-color: #F1F4FF !important;
+        }
+        .bottom-row-col-1-child-1 {
+            display: grid; 
+            grid-template-columns: 20px 60px 20px 90px 20px 35px 225px;
+        }
+        .bottom-row-col-1-child-2 {
+            display: grid; 
+            grid-template-columns: 20px 45px 125px 20px 260px;
+        }
+        .bottom-row-col-1-child-3 {
+            display: grid; 
+            grid-template-columns: 20px 60px 20px 90px 20px 50px 20px 50px 20px 50px 70px 80px;
+        }
+        .bottom-row-col-1-child-4 {
+            display: grid; 
+        }
+
+        .bottom-row-2 {
+            display: grid; 
+            
+        }
+        .bottom-row-2-child {
+            display: grid; 
+            grid-template-columns: 100px 100px 20px 60px 70px 50px 320px;
+        }
+
+       
+
+        /* ========== CELL BASE STYLES ========== */
+        .cell {
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+            display: flex;
+            align-items: center;
+            min-height: 10px;
+        }
+        .cell-label {
+            background-color: #f0f0f0;
+            font-size: 9px;
+            padding: 2px 0 2px 5px;
+            font-weight: bold;
+        }
+        .cell-white-label {
+            background-color: white;
+            font-size: 9px;
+            padding: 2px 0 2px 5px;
+        }
+        .cell-input {
+            background-color: white;
+        }
+        .cell-header {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 10px;
+            text-align: center;
+            justify-content: center;
+        }
+        .cell-black-header {
+            background-color: #000;
+            color: white;
+            text-align: center;
+            font-size: 10px;
+            justify-content: center;
+        }
+
+        /* ========== BORDER UTILITY CLASSES ========== */
+        .no-border-bottom { border-bottom: none !important; }
+        .no-border-right { border-right: none !important; }
+        .border-top { border-top: 1px solid black !important; }
+
+        /* ========== SPECIAL CELL STYLES ========== */
+        .warranty-text {
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            padding-left: 5px;
+        }
+        .cell-address {
+            grid-row: span 2;
+            display: flex;
+            flex-direction: column;
+        }
+        .cell-primary {
+            grid-column: span 4;
+        }
+        .cell-audiogram {
+            grid-column: span 2;
+        }
+        .cell-hearing-loss {
+            grid-row: span 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .cell-tests-header {
+            grid-column: span 3;
+        }
+
+        /* ========== FORM INPUT STYLES ========== */
+        .form-input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            height: 100%;
+            font-size: 9px;
+            padding-left: 5px;
+        }
+        .form-input:focus {
+            outline: 2px solid #007acc;
+            outline-offset: -1px;
+        }
+        .form-select {
+            border: none;
+            background: #f8f8f8;
+            width: 100%;
+            height: 100%;
+            font-size: 9px;
+            color: #666;
+        }
+        .form-select:focus {
+            outline: 2px solid #007acc;
+            outline-offset: -1px;
+        }
+
+        /* ========== DROPDOWN STYLES ========== */
+        .dropdown-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+            font-size: 9px;
+            line-height: 1;
+            height: 100%;
+            padding: 0 2px;
+        }
+        .dropdown-container select {
+            width: 15px;
+            height: 20px;
+            font-size: 9px;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #ccc;
+            background-color: white;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            overflow: hidden;
+        }
+        .dropdown-container select.value-selected {
+            width: auto;
+            min-width: 15px;
+            height: 20px;
+            font-size: 9px;
+            text-align: center;
+            padding: 0 2px;
+            background-color: white;
+            background-image: none;
+            appearance: none;
+        }
+        .dropdown-select-default {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+            font-size: 9px;
+            line-height: 1;
+            height: 100%;
+        }
+        .dropdown-container-default select {
+            font-size: 9px;
+            border: 1px solid #ccc;
+            background-color: white;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            overflow: hidden;
+            height: 20px;
+        }
+        .dropdown-container-default option {
+            font-size: 9px;
+        }
+        .dropdown-container-default select.value-selected {
+            width: auto;
+            min-width: 20px;
+            height: 20px;
+            font-size: 9px;
+            padding: 0 2px;
+            background-color: white;
+            background-image: none;
+            appearance: none;
+        }
+
+        /* ========== CHECKBOX STYLES ========== */
+        .checkbox-container {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            font-size: 8px;
+            line-height: 1;
+        }
+        .checkbox-container input[type="checkbox"] {
+            width: 10px;
+            height: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-toolbar">
+        <button class="toolbar-button" onclick="zoomOut()"><i class="fa-solid fa-minus"></i></button>
+        <span class="zoom-level" id="zoomLevel">90%</span>
+        <button class="toolbar-button" onclick="zoomIn()"><i class="fa-solid fa-plus"></i></button>
+        
+        <div class="toolbar-separator"></div>
+        
+        <button class="toolbar-button" onclick="downloadPDF()"><i class="fa-solid fa-download"></i> Download</button>
+    </div>
+    
+    <div class="document-container">
+        <div class="page" id="page">
+            <header class="header">
+                <h1 class="title">Outpatient Super Bill</h1>
+                <div class="logo">
+                    <img class="logo-image" src="logo.png" alt="">
+                </div>
+            </header>
+            
+            <form class="form-container" id="superBillForm">
+                <!-- ========== TOP ROW ========== -->
+                <div class="top-row">
+                    <div class="cell cell-label">Date</div>
+                    <div class="cell cell-input">
+                        <input type="date" class="form-input" name="date">
+                    </div>
+                    <div class="cell cell-label">Time</div>
+                    <div class="cell cell-input">
+                        <input type="time" class="form-input" name="time">
+                    </div>
+                    <div class="cell cell-label">Visit</div>
+                    <div class="cell cell-input">
+                        <input type="text" class="form-input" name="visit">
+                    </div>
+                    <div class="cell cell-label">Last Audiogram</div>
+                    <div class="cell cell-input">
+                        <input type="date" class="form-input" name="lastAudiogram">
+                    </div>
+                </div>
+                
+                <!-- ========== MAIN FORM ========== -->
+                <div class="main-form">
+                    <!-- Row 1: Basic Info -->
+                    <div class="main-row-1">
+                        <div class="cell cell-label">Last Name</div>
+                        <div class="cell cell-input">
+                            <input type="text" class="form-input" name="lastName">
+                        </div>
+                        <div class="cell cell-label">D.O.B. / Age</div>
+                        <div class="cell cell-input">
+                            <input type="text" class="form-input" name="dobAge" placeholder="">
+                        </div>
+                        <div class="cell cell-label">Repair Warranty:</div>
+                        <div class="cell cell-input"></div>
+                        <div class="cell cell-label">L&D Warranty:</div>
+                        <div class="cell cell-input no-border-right">
+                            <input type="text" class="form-input" name="firstName">
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Contact Info & Warranties -->
+                    <div class="main-row-2">
+                        <!-- Left Column: Contact Info -->
+                        <div class="row-2-col-1">
+                            <div class="row-2-col-1-child-1">
+                                <div class="cell cell-label">First Name</div>
+                                <div class="cell cell-input">
+                                    <input type="text" class="form-input" name="firstName">
+                                </div>
+                                <div class="cell cell-label">Phone</div>
+                                <div class="cell cell-input">
+                                    <input type="tel" class="form-input" name="phone">
+                                </div>
+                            </div>
+                            <div class="row-2-col-1-child-2">
+                                <div class="cell cell-label">Address,<br>City, Zip</div>
+                                <div class="cell cell-input">
+                                    <input type="text" class="form-input" name="address">
+                                </div>
+                            </div>
+                            <div class="row-2-col-1-child-3">
+                                <div class="cell cell-label">Primary Physician</div>
+                                <div class="cell cell-input">
+                                    <input type="text" class="form-input" name="primaryPhysician">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Warranty Options -->
+                        <div class="row-2-col-2">
+                            <div class="main-row-3">
+                                <!-- Repair Warranties -->
+                                <div class="row-2-col-2-child-1">
+                                    <div class="cell warranty-text no-border-bottom no-border-right">Out of Warranty Repair -12Mo ($375)</div>
+                                    <div class="cell no-border-bottom">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="repairWarranty12L">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="repairWarranty12R">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                    <div class="cell warranty-text no-border-bottom no-border-right">1 Yr. Extended Warranty Repair ($275 Ea.)</div>
+                                    <div class="cell no-border-bottom">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="extWarranty1yrL">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="extWarranty1yrR">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                    <div class="cell warranty-text no-border-bottom no-border-right">2 Yr. Extended Warranty Repair ($500 Ea.) </div>
+                                    <div class="cell no-border-bottom">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="extWarranty2yrL">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="extWarranty2yrR">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                    <div class="cell warranty-text no-border-right">Out of Warranty Repair > 5 yr. ($500 Ea.)</div>
+                                    <div class="cell">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="repairOver5yrL">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="repairOver5yrR">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- L&D Warranties -->
+                                <div class="row-2-col-2-child-2">
+                                    <div class="cell warranty-text no-border-bottom no-border-right">L&D replacement: ($400 Ea.) </div>
+                                    <div class="cell no-border-bottom no-border-right">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="ldReplacementL">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="ldReplacementR">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                    <div class="cell warranty-text no-border-bottom no-border-right">1 Yr. Ext. L&D ($80 Ea.) </div>
+                                    <div class="cell no-border-bottom no-border-right">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="extLd1yrL">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="extLd1yrR">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                    <div class="cell warranty-text no-border-bottom no-border-right">2 Yr. Ext. L&D ($130 Ea.) </div>
+                                    <div class="cell no-border-bottom no-border-right">
+                                        <div class="dropdown-container">
+                                            L 
+                                            <select name="extLd2yrL">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            <select name="extLd2yrR">
+                                                <option value="0">0</option>
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                            </select>
+                                            R
+                                        </div>
+                                    </div>
+                                    <!-- CCA's L&D DED -->
+                                    <div class="row-2-col-2-child-cca">
+                                        <div class="cell warranty-text no-border-right">CCA'S L&D DED: </div>
+                                        <div class="cell cell-input no-border-right">
+                                            <input type="text" class="form-input" name="ccaDed">
+                                        </div>                                
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Diagnosis & Tests -->
+                    <div class="main-row-4">
+                        <!-- Column 1 -->
+                        <div class="row-4-col-1">
+                            <div class="cell cell-label" style="grid-row: span 2;">
+                                Hearing Loss ICD-10
+                            </div>
+                            <div class="cell cell-input" style="padding-left: 5px;">
+                                <div class="dropdown-container-default">
+                                    <select name="icd10_1">
+                                        <option value="0">--SELECT--</option>
+                                        <option value="1">SNHL Bilateral H90.3</option>
+                                        <option value="2">SNHL Right; WNL Left H90.41</option>
+                                        <option value="3">SNHL Left; WNL Right H90.42</option>
+                                        <option value="4">SNHL Right; CHL or MHL Left H90.A21</option>
+                                        <option value="5">SNHL Left; CHL or MHL Right H90.A22</option>
+                                        <option value="6">CHL Bilateral H90.4</option>
+                                        <option value="7">CHL Right; WNL Left H90.11</option>
+                                        <option value="8">CHL Left, WNL Right H90.12</option>
+                                        <option value="9">CHL Right; SNHL or MHL Left H90.A11</option>
+                                        <option value="10">MHL Bilateral H90.6</option>
+                                        <option value="11">MHL Right; WNL Left H90.71</option>
+                                        <option value="12">MHL Left; WNL Right H90.72</option>
+                                        <option value="13">MHL Right; SNHL or CHL Left H90.A31</option>
+                                        <option value="14">MHL Left; SNHL or CHL Right H90.A32</option>
+                                        <option value="15">WNL Bilateral Z01.10</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="cell cell-input" style="padding-left: 5px;">
+                                <div class="dropdown-container-default">
+                                    <select name="icd10_2">
+                                        <option value="0">--SELECT--</option>
+                                        <option value="1">SNHL Bilateral H90.3</option>
+                                        <option value="2">SNHL Right; WNL Left H90.41</option>
+                                        <option value="3">SNHL Left; WNL Right H90.42</option>
+                                        <option value="4">SNHL Right; CHL or MHL Left H90.A21</option>
+                                        <option value="5">SNHL Left; CHL or MHL Right H90.A22</option>
+                                        <option value="6">CHL Bilateral H90.4</option>
+                                        <option value="7">CHL Right; WNL Left H90.11</option>
+                                        <option value="8">CHL Left, WNL Right H90.12</option>
+                                        <option value="9">CHL Right; SNHL or MHL Left H90.A11</option>
+                                        <option value="10">MHL Bilateral H90.6</option>
+                                        <option value="11">MHL Right; WNL Left H90.71</option>
+                                        <option value="12">MHL Left; WNL Right H90.72</option>
+                                        <option value="13">MHL Right; SNHL or CHL Left H90.A31</option>
+                                        <option value="14">MHL Left; SNHL or CHL Right H90.A32</option>
+                                        <option value="15">WNL Bilateral Z01.10</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 2 -->
+                        <div class="row-4-col-2">
+                            <div class="cell cell-header cell-black-header ">AUDIOLOGIC FUNCTION TESTS</div>
+                            <div class="cell cell-input" style="padding-left: 5px;">
+                                <div class="dropdown-container-default">
+                                    <select name="diag_code_1">
+                                        <option value="0">--SELECT--</option>
+                                        <option value="1">SNHL Bilateral H90.3</option>
+                                        <option value="2">SNHL Right; WNL Left H90.41</option>
+                                        <option value="3">SNHL Left; WNL Right H90.42</option>
+                                        <option value="4">SNHL Right; CHL or MHL Left H90.A21</option>
+                                        <option value="5">SNHL Left; CHL or MHL Right H90.A22</option>
+                                        <option value="6">CHL Bilateral H90.4</option>
+                                        <option value="7">CHL Right; WNL Left H90.11</option>
+                                        <option value="8">CHL Left, WNL Right H90.12</option>
+                                        <option value="9">CHL Right; SNHL or MHL Left H90.A11</option>
+                                        <option value="10">MHL Bilateral H90.6</option>
+                                        <option value="11">MHL Right; WNL Left H90.71</option>
+                                        <option value="12">MHL Left; WNL Right H90.72</option>
+                                        <option value="13">MHL Right; SNHL or CHL Left H90.A31</option>
+                                        <option value="14">MHL Left; SNHL or CHL Right H90.A32</option>
+                                        <option value="15">WNL Bilateral Z01.10</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3 -->
+                        <div class="row-4-col-3">
+                            <div class="cell cell-header no-border-right">Tinnitus ICD-10</div>
+                            <div class="cell cell-input no-border-right" style="padding-left: 5px;">
+                                <div class="dropdown-container-default">
+                                    <select name="treatment_1">
+                                        <option value="0">--SELECT--</option>
+                                        <option value="1">Tinnitus Right - H93.11</option>
+                                        <option value="2">Tinnitus Left - H93.12</option>
+                                        <option value="3">Tinnitus Bilateral - H93.13</option>
+                                        <option value="4">Tinnitus, unspecified ear - H93.19</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 5: Service Categories -->
+                    <div class="main-row-5">
+                        <!-- Left Column -->
+                        <div class="row-5-top-row">
+                            <!-- Header Row -->
+                            <div class="cell cell-label row5-cell-borders">Category</div>
+                            <div class="cell cell-label row5-cell-borders">Code</div>
+                            <div class="cell cell-label row5-cell-borders">Fee</div>
+                            <div class="cell cell-label row5-cell-last"></div>
+                            <div class="cell cell-label row5-cell-borders">Category</div>
+                            <div class="cell cell-label row5-cell-borders">Code</div>
+                            <div class="cell cell-label row5-cell-borders">Fee</div>
+                            <div class="cell cell-label row5-cell-last"></div>
+                        </div>
+
+                        <div class="row-5-cols">
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Tympanometry</div>
+                                <div class="cell cell-white-label row5-cell-borders">92567</div>
+                                <div class="cell cell-white-label row5-cell-borders">$40</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="tympanometry">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Stenger Test, pure tone</div>
+                                <div class="cell cell-white-label row5-cell-borders">92565</div>
+                                <div class="cell cell-white-label row5-cell-borders">$160</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="stenger_pure">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Tympanometry and reflex threshold measurement</div>
+                                <div class="cell cell-white-label row5-cell-borders">92550</div>
+                                <div class="cell cell-white-label row5-cell-borders">$50</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="tympanom_reflex">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Stenger Test, speech</div>
+                                <div class="cell cell-white-label row5-cell-borders">92577</div>
+                                <div class="cell cell-white-label row5-cell-borders">$90</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="stenger_speech">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Acoustic immittance testing, includes tympanometry (impedance testing), acoustic reflex threshold testing, and acoustic reflex decay testing</div>
+                                <div class="cell cell-white-label row5-cell-borders">92570</div>
+                                <div class="cell cell-white-label row5-cell-borders">$75</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="acoustic_immittance">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Comprehensive diagnostic evaluation (quantitative analysis of outer hair cell function by cochlear mapping, min. of 12 frequencies), w/ interpretation and report</div>
+                                <div class="cell cell-white-label row5-cell-borders">92558</div>
+                                <div class="cell cell-white-label row5-cell-borders">$40</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="diagnostic_eval">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Comprehensive audiometry threshold evaluation and speech recognition (bundle of 92553&92556)</div>
+                                <div class="cell cell-white-label row5-cell-borders">92557</div>
+                                <div class="cell cell-white-label row5-cell-borders">$200</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="comprehensive_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Evaluation of central auditory function, with report; initial 60 min</div>
+                                <div class="cell cell-white-label row5-cell-borders">92520</div>
+                                <div class="cell cell-white-label row5-cell-borders">$95</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="central_audit">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Pure tone audiometry threshold; air only</div>
+                                <div class="cell cell-white-label row5-cell-borders">92552</div>
+                                <div class="cell cell-white-label row5-cell-borders">$80</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="pure_tone_air">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Conditioned play audiometry</div>
+                                <div class="cell cell-white-label row5-cell-borders">92582</div>
+                                <div class="cell cell-white-label row5-cell-borders">$180</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="conditioned_play">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Air and bone</div>
+                                <div class="cell cell-white-label row5-cell-borders">92553</div>
+                                <div class="cell cell-white-label row5-cell-borders">$95</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="air_bone">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Select picture audiometry</div>
+                                <div class="cell cell-white-label row5-cell-borders">92583</div>
+                                <div class="cell cell-white-label row5-cell-borders">$115</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="picture_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Comprehensive Speech Audiometry</div>
+                                <div class="cell cell-white-label row5-cell-borders">92556</div>
+                                <div class="cell cell-white-label row5-cell-borders">$60</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-5-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Tinnitus</div>
+                                <div class="cell cell-white-label row5-cell-borders">92625</div>
+                                <div class="cell cell-white-label row5-cell-borders">$150</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="tinnitus_test">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 6: Service Categories -->
+                    <div class="main-row-6">
+                        <div class="row-6-cols">
+                            <div class="cell cell-header cell-black-header ">Hearing Aid Procedure</div>
+                            <div class="cell cell-header cell-black-header ">Office Visit Procedure</div>
+                        </div>
+
+                        <!-- Left Column -->
+                        <div class="row-6-top-row">
+                            <!-- Header Row -->
+                            <div class="cell cell-label row5-cell-borders">Category</div>
+                            <div class="cell cell-label row5-cell-borders">Code</div>
+                            <div class="cell cell-label row5-cell-borders">Fee</div>
+                            <div class="cell cell-label row5-cell-last"></div>
+                            <div class="cell cell-label row5-cell-borders">Category</div>
+                            <div class="cell cell-label row5-cell-borders">Code</div>
+                            <div class="cell cell-label row5-cell-borders">Fee</div>
+                            <div class="cell cell-label row5-cell-last"></div>
+                        </div>
+
+                        <div class="row-6-cols">
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders" style="line-height: 1;">Electroacoustic evaluation for hearing aid; monaural (not covered by Medicare) </div>
+                                <div class="cell cell-white-label row5-cell-borders">92549</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="tympanom_reflex">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Comprehensive Hearing Exam</div>
+                                <div class="cell cell-white-label row5-cell-borders">92557</div>
+                                <div class="cell cell-white-label row5-cell-borders">$80</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="tympanom_reflex">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders" style="line-height: 1;">Electroacoustic evaluation for hearing aid; binaural (not covered by Medicare)</div>
+                                <div class="cell cell-white-label row5-cell-borders">92595</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="acoustic_immittance">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Acoustic Immersion Testing</div>
+                                <div class="cell cell-white-label row5-cell-borders">92570</div>
+                                <div class="cell cell-white-label row5-cell-borders">$80</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="acoustic_immittance">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">In Office Repair</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="comprehensive_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Communication Needs Assessment</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$275</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="comprehensive_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Modification   Mon/Bin</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="pure_tone_air">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Office Visit Fee</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="pure_tone_air">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Hearing aid retubing   Mon/Bin</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="air_bone">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Wax Removal</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$50</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="air_bone">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Lyric Tourist Case</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$50</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">RUSH Delivery</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$55</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Cleaning hearing device    Mon/Bin</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Cognivue</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$50</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Reprogramming  Mon/Bin</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Co-Pay</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$0</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Silicone ear impression  Mon/Bin</div>
+                                <div class="cell cell-white-label row5-cell-borders">Each</div>
+                                <div class="cell cell-white-label row5-cell-borders">$30</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="row-6-col-child-custom">
+                                    <div class="cell cell-input row5-cell-borders background">
+                                        <input type="text" class="form-input" name="customService1" style="font-size: 9px; padding: 2px 0 2px 5px;">
+                                    </div>
+                                    <div class="cell cell-white-label row5-cell-borders"></div>
+                                    <div class="cell cell-input row5-cell-borders background">
+                                        <input type="number" class="form-input custom-service-fee" name="customFee1" style="font-size: 9px; padding: 2px 0 2px 5px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Audiology Report</div>
+                                <div class="cell cell-white-label row5-cell-borders"></div>
+                                <div class="cell cell-white-label row5-cell-borders">$75</div>
+                                <div class="cell cell-white-label row5-cell-last">
+                                    <div class="checkbox-container">
+                                        <input type="checkbox" name="speech_audio">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-6-col-child">
+                                <div class="row-6-col-child-custom">
+                                    <div class="cell cell-input row5-cell-borders background">
+                                        <input type="text" class="form-input" name="customService2" style="font-size: 9px; padding: 2px 0 2px 5px;">
+                                    </div>
+                                    <div class="cell cell-white-label row5-cell-borders"></div>
+                                    <div class="cell cell-input row5-cell-borders background">
+                                        <input type="number" class="form-input custom-service-fee" name="customFee2" style="font-size: 9px; padding: 2px 0 2px 5px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 7: Services Categories -->
+                    <div class="main-row-7">
+                        <div class="row-7-cols">
+                            <div class="cell cell-header cell-black-header">Ear Mold Accessories</div>
+                            <div class="cell cell-header cell-black-header">Hearing Device Supplies</div>
+                        </div>
+
+                        <!-- Header Row -->
+                        <div class="row-7-top-row">
+                            <div class="cell cell-label row5-cell-borders">Category</div>
+                            <div class="cell cell-label row5-cell-borders">Qty</div>
+                            <div class="cell cell-label row5-cell-borders">Price</div>
+                            <div class="cell cell-label row5-cell-last">Total</div>
+
+                            <div class="cell cell-label row5-cell-borders">Category</div>
+                            <div class="cell cell-label row5-cell-borders">Qty</div>
+                            <div class="cell cell-label row5-cell-borders">Price</div>
+                            <div class="cell cell-label row5-cell-borders">Total</div>
+                        </div>
+
+                        <div class="row-7-cols">
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">BTE Earmold</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="125">$125</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Audio wipes</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="5">$5</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Hearing Protection</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="100">$100</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Batteries (Box of 60)</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="15">$15</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Musician Earplug</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="175">$175</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Batteries (2 packs of 6 cells)</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="3">$3</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Swim/Sleep mold</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="100">$100</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Ear gene/Otoease/Miracell</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="10">$10</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">C-Shell</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="150">$150</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Dehumidifier</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="15">$15</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Phonak Receiver</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="0">$0</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Wax traps</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="5">$5</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Receiver (Signia, Starkey, Widex, ReSound)</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="0">$0</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Charger (Signia, Starkey, Widex, ReSound)</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="100">$100</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Oticon Receiver</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="0">$0</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Oticon Rechargeable Batteries</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="50">$50</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Serenity Choice Ear Plugs</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="50">$50</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Phonak Charger</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="50">$50</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Wax Removal Kit</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="10">$10</div>
+                                <div class="cell cell-white-label row5-cell-last total">$0</div>
+                            </div>
+
+                            <div class="row-7-col-child">
+                                <div class="cell cell-white-label row5-cell-borders">Oticon Charger</div>
+                                <div class="cell cell-input row5-cell-borders">
+                                    <input type="text" class="form-input qty background" name="lastName">
+                                </div>
+                                <div class="cell cell-white-label row5-cell-borders price" data-price="150">$150</div>
+                                <div class="cell cell-white-label row5-cell-borders total">$0</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== BOTTOM ROW ========== -->
+                <div class="bottom-row">
+                    <div class="bottom-row-col-1">
+                        <div class="bottom-row-col-1-child-1">
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Medicare</div>
+
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Private Insurance</div>
+
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Other:</div>
+                            <div class="cell cell-input no-border-right background">
+                                <input type="text" class="form-input" name="lastName">
+                            </div>
+                        </div>
+                        
+                        <div class="bottom-row-col-1-child-2">
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Check #</div>
+                            <div class="cell cell-input no-border-right background">
+                                <input type="text" class="form-input" name="lastName">
+                            </div>
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Cash</div>
+                        </div>
+
+                        <div class="bottom-row-col-1-child-3">
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Visa</div>
+
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Mastercard</div>
+
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Debit</div>
+
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">Discover</div>
+
+                            <div class="cell cell-white-label no-border-background">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" name="central_audit">
+                                </div>
+                            </div>
+                            <div class="cell cell-white-label no-border-background">AMEX</div>
+
+                            <div class="cell cell-white-label no-border-background" style="display: flex; justify-content: flex-end; padding: 2px 5px 2px 0;">
+                                Last 4 digits: 
+                            </div>
+                            <div class="cell cell-input no-border-right background">
+                                <input type="text" class="form-input" name="lastName">
+                            </div>
+                        </div>
+
+                        <div class="bottom-row-col-1-child-4">
+                            <br>
+                        </div>
+
+                    </div>
+                    <div class="bottom-row-col-2">
+                        <div class="cell cell-label no-border-background">Previous Balance: $ &nbsp;</div>
+                        <div class="cell cell-input no-border-right background">
+                            <input type="number" class="form-input" id="prevBalance" style="text-align: end; padding-right: 5px;">
+                        </div>
+                        <div class="cell cell-label no-border-background">Total Charges: $ &nbsp;</div>
+                        <div class="cell cell-label no-border-right white" id="totalCharges" style="text-align: end;  padding-right: 5px;">0</div>
+                        <div class="cell cell-label no-border-background">Payment: $ &nbsp;</div>
+                        <div class="cell cell-input no-border-right background">
+                            <input type="number" class="form-input" id="payment" style="text-align: end;  padding-right: 5px;">
+                        </div>
+                        <div class="cell cell-label no-border-background">Total Due: $ &nbsp;</div>
+                        <div class="cell cell-label no-border-right white" id="totalDue" style="text-align: end;  padding-right: 5px;">0</div>
+                    </div>
+                </div>
+
+                <div class="bottom-row-2">
+                    <div class="bottom-row-2-child">
+                        <div class="cell cell-white-label no-border-background" style="font-weight: bold;">Audiologist</div>
+                        <div class="cell cell-white-label no-border-background"></div>
+                        <div class="cell cell-white-label no-border-background"></div>
+                        <div class="cell cell-white-label no-border-background" style="font-weight: bold;">Lic.</div>
+                        <div class="cell cell-white-label no-border-background" style="font-weight: bold;">NPI:</div>
+                        <div class="cell cell-white-label no-border-background" style="display: flex; justify-content: flex-end; padding: 2px 5px 2px 0;">TAX ID:</div>
+                        <div class="cell cell-white-label no-border-background" style="font-weight: bold;"> 200286410</div>
+                    </div>
+
+                    <div class="bottom-row-2-child">
+                        <div class="cell cell-white-label no-border-background">Laurel Hinton, Au.D.</div>
+                        <div class="cell cell-white-label no-border-background">Doctor of Audiology</div>
+                        <div class="cell cell-white-label no-border-background">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="central_audit">
+                            </div>
+                        </div>
+                        <div class="cell cell-white-label no-border-background">AU1595</div>
+                        <div class="cell cell-white-label no-border-background">1356482939</div>
+                        <div class="cell cell-white-label no-border-background"></div>
+                        <div class="cell cell-white-label no-border-background"></div>
+                    </div>
+
+                    <div class="bottom-row-2-child">
+                        <div class="cell cell-white-label no-border-background">Katy Zuercher, Au.D.</div>
+                        <div class="cell cell-white-label no-border-background">Doctor of Audiology</div>
+                        <div class="cell cell-white-label no-border-background">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="central_audit">
+                            </div>
+                        </div>
+                        <div class="cell cell-white-label no-border-background">AU3476</div>
+                        <div class="cell cell-white-label no-border-background">1881238947</div>
+                        <div class="cell cell-white-label no-border-background" style="display: flex; justify-content: flex-end; padding: 2px 5px 2px 0;">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="central_audit">
+                            </div>
+                        </div>
+                        <div class="cell cell-white-label no-border-background"><strong>Monterey Office</strong> - 917 Pacific Monterey, CA 93940</div>
+                    </div>
+
+                    <div class="bottom-row-2-child">
+                        <div class="cell cell-white-label no-border-background">Heather B., Au.D.</div>
+                        <div class="cell cell-white-label no-border-background">Doctor of Audiology</div>
+                        <div class="cell cell-white-label no-border-background">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="central_audit">
+                            </div>
+                        </div>
+                        <div class="cell cell-white-label no-border-background">AU40664</div>
+                        <div class="cell cell-white-label no-border-background">1790578276</div>
+                        <div class="cell cell-white-label no-border-background" style="display: flex; justify-content: flex-end; padding: 2px 5px 2px 0;">
+                            <div class="checkbox-container">
+                                <input  type="checkbox" name="central_audit">
+                            </div>
+                        </div>
+                        <div class="cell cell-white-label no-border-background"><strong>Salinas Office</strong> - 307 Main St #240, Salinas, CA 93901</div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ========== ZOOM FUNCTIONALITY ========== */
+        let currentZoom = 0.9;
+        
+        function updateZoom() {
+            const page = document.getElementById('page');
+            const zoomLevel = document.getElementById('zoomLevel');
+            
+            page.style.transform = `scale(${currentZoom})`;
+            zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+        }
+        
+        function zoomIn() {
+            if (currentZoom < 2.0) {
+                currentZoom += 0.1;
+                updateZoom();
+            }
+        }
+        
+        function zoomOut() {
+            if (currentZoom > 0.3) {
+                currentZoom -= 0.1;
+                updateZoom();
+            }
+        }
+        
+        /* ========== FORM DATA MANAGEMENT ========== */
+        function getFormData() {
+            const form = document.getElementById('superBillForm');
+            const formData = new FormData(form);
+            const data = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (data[key]) {
+                    // Handle multiple values (like checkboxes)
+                    if (Array.isArray(data[key])) {
+                        data[key].push(value);
+                    } else {
+                        data[key] = [data[key], value];
+                    }
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            return data;
+        }
+        
+        /* ========== AUTO-SAVE FUNCTIONALITY ========== */
+        function autoSave() {
+            const data = getFormData();
+            //console.log('Form data:', data);
+            // localStorage functionality removed for compatibility
+        }
+        
+        /* ========== DROPDOWN STYLING ========== */
+        function initializeDropdowns() {
+            document.querySelectorAll('.dropdown-container select').forEach(select => {
+                select.addEventListener('change', function() {
+                    if (this.value !== "") {
+                        this.classList.add('value-selected');
+                    } else {
+                        this.classList.remove('value-selected');
+                    }
+                });
+            });
+        }
+
+        /* ========== PDF DOWNLOAD FUNCTIONALITY ========== */
+        function downloadPDF() {
+            // Check if libraries are loaded
+            if (typeof html2canvas === 'undefined') {
+                alert('PDF library not loaded. Please refresh the page and try again.');
+                return;
+            }
+            
+            if (typeof window.jspdf === 'undefined') {
+                alert('PDF library not loaded. Please refresh the page and try again.');
+                return;
+            }
+
+            const button = document.querySelector('button[onclick="downloadPDF()"]');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            button.disabled = true;
+
+            // Hide toolbar during PDF generation
+            const toolbar = document.querySelector('.pdf-toolbar');
+            toolbar.style.display = 'none';
+            
+            // Reset zoom to 100% for PDF generation
+            const page = document.getElementById('page');
+            const originalTransform = page.style.transform;
+            page.style.transform = 'scale(1)';
+            
+            // Wait for styles to apply
+            setTimeout(() => {
+                html2canvas(page, {
+                    scale: 3, // Higher scale for better quality
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: page.scrollWidth,
+                    height: page.scrollHeight,
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: page.scrollWidth,
+                    windowHeight: page.scrollHeight,
+                    dpi: 300, // Higher DPI
+                    logging: false
+                }).then(function(canvas) {
+                    try {
+                        const jsPDF = window.jspdf.jsPDF;
+                        
+                        // Standard letter size in points (72 DPI)
+                        const pageWidth = 612; // 8.5 inches * 72
+                        const pageHeight = 792; // 11 inches * 72
+                        
+                        // Calculate scaling to fit the page properly
+                        const canvasAspectRatio = canvas.height / canvas.width;
+                        const pageAspectRatio = pageHeight / pageWidth;
+                        
+                        let imgWidth = pageWidth;
+                        let imgHeight = pageWidth * canvasAspectRatio;
+                        
+                        // If image is taller than page, scale to fit height
+                        if (imgHeight > pageHeight) {
+                            imgHeight = pageHeight;
+                            imgWidth = pageHeight / canvasAspectRatio;
+                        }
+                        
+                        const pdf = new jsPDF({
+                            orientation: 'portrait',
+                            unit: 'pt',
+                            format: 'letter',
+                            compress: false // Better quality
+                        });
+                        
+                        // Higher quality image data
+                        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                        
+                        // Center the image on the page
+                        const xPos = (pageWidth - imgWidth) / 2;
+                        const yPos = 0;
+                        
+                        pdf.addImage(imgData, 'JPEG', xPos, yPos, imgWidth, imgHeight);
+                        
+                        // Generate filename
+                        const today = new Date();
+                        const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+                        // Get hours, minutes, seconds with leading zeros
+                        const hours = String(today.getHours()).padStart(2, '0');
+                        const minutes = String(today.getMinutes()).padStart(2, '0');
+                        const seconds = String(today.getSeconds()).padStart(2, '0');
+                        const timeStr = `${hours}-${minutes}-${seconds}`; // 14-05-33
+
+                        const lastName = document.querySelector('input[name="lastName"]').value;
+                        const patientName = lastName ? lastName.replace(/[^a-zA-Z0-9]/g, '') : 'Patient';
+
+                        const filename = `OutPatientSuperBill_${patientName}_${dateStr}_${timeStr}.pdf`;
+
+                        
+                        pdf.save(filename);
+                        
+                    } catch (error) {
+                        console.error('PDF creation error:', error);
+                        alert('Error creating PDF: ' + error.message);
+                    }
+                }).catch(function(error) {
+                    console.error('Canvas creation error:', error);
+                    alert('Error capturing form: ' + error.message);
+                }).finally(function() {
+                    // Restore original styles
+                    toolbar.style.display = 'flex';
+                    page.style.transform = originalTransform;
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                });
+            }, 200); // Slightly longer delay for better rendering
+        }
+
+        /* ========== INITIALIZATION ========== */
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('superBillForm');
+            form.addEventListener('change', autoSave);
+            initializeDropdowns();
+            updateZoom();
+        });
+
+        // JS to update totals dynamically
+        document.querySelectorAll('.main-row-7 .qty').forEach(input => {
+            input.addEventListener('input', function () {
+                const row = this.closest('.row-7-col-child');
+                const price = parseFloat(row.querySelector('.price').dataset.price);
+                const qty = parseInt(this.value) || 0;
+                const total = row.querySelector('.total');
+                total.textContent = `$${(price * qty).toFixed(2)}`;
+            });
+        });
+
+    </script>
+
+
+
+<script>
+    function parseMoney(val) {
+        let n = parseFloat(val);
+        return isNaN(n) ? 0 : n;
+    }
+
+    function calculateTotals() {
+        let totalCharges = 0;
+
+        /* ==== Warranties (Row 2) ==== */
+        const warrantyPrices = {
+            repairWarranty12: 375,
+            extWarranty1yr: 275,
+            extWarranty2yr: 500,
+            repairOver5yr: 500,
+            ldReplacement: 400,
+            extLd1yr: 80,
+            extLd2yr: 130
+        };
+        for (let key in warrantyPrices) {
+            ["L", "R"].forEach(side => {
+                let sel = document.querySelector(`select[name="${key}${side}"]`);
+                if (sel) totalCharges += warrantyPrices[key] * parseMoney(sel.value);
+            });
+        }
+
+        /* ==== Row 5 & Row 6 fixed services ==== */
+        document.querySelectorAll('.row-5-col-child, .row-6-col-child').forEach(row => {
+            let feeCell = row.querySelector('.cell.cell-white-label:nth-child(3)');
+            let checkbox = row.querySelector('input[type="checkbox"]');
+            if (feeCell && checkbox && checkbox.checked) {
+                let feeText = feeCell.innerText.replace(/[^0-9.]/g, "");
+                totalCharges += parseMoney(feeText);
+            }
+        });
+
+        /* ==== Row 6 custom services ==== */
+        document.querySelectorAll('.row-6-col-child-custom').forEach(customRow => {
+            let feeInput = customRow.querySelector('.custom-service-fee');
+            if (feeInput) {
+                totalCharges += parseMoney(feeInput.value);
+            }
+        });
+
+        /* ==== Row 7 qty × price ==== */
+        document.querySelectorAll('.row-7-col-child').forEach(row => {
+            let qtyInput = row.querySelector('.qty');
+            let priceCell = row.querySelector('.price');
+            let totalCell = row.querySelector('.total');
+            if (qtyInput && priceCell && totalCell) {
+                let qty = parseMoney(qtyInput.value);
+                let price = parseMoney(priceCell.dataset.price);
+                let rowTotal = qty * price;
+                totalCell.innerText = "$" + rowTotal.toFixed(2);
+                totalCharges += rowTotal;
+            }
+        });
+
+        /* ==== Previous Balance & Payment ==== */
+        let prevBalance = parseMoney(document.getElementById('prevBalance').value);
+        let payment = parseMoney(document.getElementById('payment').value);
+
+        /* ==== Update totals ==== */
+        document.getElementById('totalCharges').innerText = totalCharges.toFixed(2);
+        let totalDue = prevBalance + totalCharges - payment;
+        document.getElementById('totalDue').innerText = totalDue.toFixed(2);
+    }
+
+    /* ==== Auto update listeners ==== */
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', calculateTotals);
+        el.addEventListener('change', calculateTotals);
+    });
+
+    /* Initial calc */
+    window.addEventListener('DOMContentLoaded', calculateTotals);
+    </script>
+
+
+
+</body>
+</html>    
